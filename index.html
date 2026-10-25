@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Employee Management System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- ===== Header ===== -->
+    <header class="topbar">
+      <div>
+        <h1>Employee Management System</h1>
+        <p>Flask REST API + SQLite + HTML / CSS / JavaScript</p>
+      </div>
+      <span id="conn" class="conn"><i></i><b>Connecting…</b></span>
+    </header>
+
+    <!-- ===== Navigation ===== -->
+    <nav class="tabs" aria-label="Main navigation">
+      <button class="tab active" data-tab="employees" type="button">Employees</button>
+      <button class="tab" data-tab="departments" type="button">Departments</button>
+    </nav>
+
+    <!-- ===== KPI summary ===== -->
+    <section class="kpis" aria-label="Summary">
+      <div class="kpi"><span>Total employees</span><strong id="kpi-total">–</strong></div>
+      <div class="kpi"><span>Active staff</span><strong id="kpi-active">–</strong></div>
+      <div class="kpi"><span>Departments</span><strong id="kpi-depts">–</strong></div>
+      <div class="kpi"><span>Monthly payroll</span><strong id="kpi-payroll">–</strong></div>
+    </section>
+
+    <!-- ===== Employees view ===== -->
+    <main id="view-employees" class="layout">
+      <aside class="card">
+        <h2 id="emp-form-title">Add New Employee</h2>
+        <p class="hint">Fields marked * are required.</p>
+        <form id="emp-form" novalidate>
+          <input type="hidden" id="emp-id" />
+
+          <label for="full_name">Full name *</label>
+          <input id="full_name" type="text" placeholder="e.g. Ananya Rao" />
+          <small class="err" data-for="full_name"></small>
+
+          <label for="email">Email *</label>
+          <input id="email" type="text" placeholder="name@company.com" />
+          <small class="err" data-for="email"></small>
+
+          <div class="row2">
+            <div>
+              <label for="phone">Phone</label>
+              <input id="phone" type="text" placeholder="10 digits" />
+              <small class="err" data-for="phone"></small>
+            </div>
+            <div>
+              <label for="join_date">Joining date *</label>
+              <input id="join_date" type="date" />
+              <small class="err" data-for="join_date"></small>
+            </div>
+          </div>
+
+          <label for="department_id">Department *</label>
+          <select id="department_id"></select>
+          <small class="err" data-for="department_id"></small>
+
+          <label for="designation">Designation *</label>
+          <input id="designation" type="text" placeholder="e.g. Frontend Developer" />
+          <small class="err" data-for="designation"></small>
+
+          <div class="row2">
+            <div>
+              <label for="salary">Monthly salary (₹) *</label>
+              <input id="salary" type="text" inputmode="numeric" placeholder="e.g. 75000" />
+              <small class="err" data-for="salary"></small>
+            </div>
+            <div>
+              <label for="status">Status</label>
+              <select id="status">
+                <option>Active</option>
+                <option>On Leave</option>
+                <option>Resigned</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="emp-save" class="btn primary" type="submit">Save Employee</button>
+            <button id="emp-cancel" class="btn ghost" type="button" hidden>Cancel edit</button>
+          </div>
+        </form>
+      </aside>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Employee Directory</h2>
+          <div class="tools">
+            <input id="search" type="search" placeholder="Search name, email, role…" />
+            <select id="filter-dept"><option value="">All departments</option></select>
+            <button id="refresh" class="btn ghost" type="button">Refresh</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Employee</th><th>Department</th><th>Designation</th>
+                <th class="num">Salary</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="emp-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===== Departments view ===== -->
+    <main id="view-departments" class="layout" hidden>
+      <aside class="card">
+        <h2 id="dept-form-title">Add New Department</h2>
+        <p class="hint">Department names must be unique.</p>
+        <form id="dept-form" novalidate>
+          <input type="hidden" id="dept-id" />
+          <label for="dept-name">Department name *</label>
+          <input id="dept-name" type="text" placeholder="e.g. Procurement" />
+          <small class="err" data-for="dept-name"></small>
+
+          <label for="dept-location">Location</label>
+          <input id="dept-location" type="text" placeholder="e.g. Bengaluru HQ - Block C" />
+
+          <div class="actions">
+            <button class="btn primary" type="submit">Save Department</button>
+            <button id="dept-cancel" class="btn ghost" type="button" hidden>Cancel edit</button>
+          </div>
+        </form>
+      </aside>
+
+      <section class="card">
+        <div class="card-head"><h2>Departments</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>ID</th><th>Department</th><th>Location</th><th class="num">Employees</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="dept-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toasts" aria-live="polite"></div>
+
+  <!-- Delete confirmation dialog -->
+  <div id="modal" class="modal" hidden>
+    <div class="dialog" role="dialog" aria-modal="true">
+      <h3 id="modal-title">Confirm delete</h3>
+      <p id="modal-text"></p>
+      <div class="actions end">
+        <button id="modal-cancel" class="btn ghost" type="button">Cancel</button>
+        <button id="modal-ok" class="btn danger" type="button">Yes, delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
